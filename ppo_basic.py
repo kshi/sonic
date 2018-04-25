@@ -19,7 +19,7 @@ sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-numtrajs = 5  # num of trajecories to collect at each iteration 
+numtrajs = 10  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
 gamma = .99
     
@@ -53,11 +53,11 @@ for ite in range(iterations):
             obss.append(obs)
             acts.append(action_index)
             rews.append(reward)
-            rsum += reward
+            rsum += max(0, reward)
             # update
             obs = newobs
             
-            if numsteps > 1000 and np.mean(rews[-200:]) < 1:
+            if numsteps > 200 and np.mean(rews[-200:]) < 1:
                 done = True
 
         print(rsum)

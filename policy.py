@@ -1,10 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from baselines.a2c.utils import ortho_init
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.ppo2.policies import CnnPolicy
-from baselines.a2c.utils import conv, fc, conv_to_fc, batch_to_seq, seq_to_batch, lstm, lnlstm
-from baselines.common.distributions import make_pdtype
+
 from utils import *
 
 class Policy(object):
@@ -19,13 +15,15 @@ class Policy(object):
         
         X = tf.placeholder(tf.uint8, ob_shape)
         scaled_images = tf.cast(X, tf.float32) / 255.
-        h = activ(conv(scaled_images, 'c1', nf=32, rf=8, stride=4, init_scale=np.sqrt(2)))
-        h2 = activ(conv(h, 'c2', nf=64, rf=4, stride=2, init_scale=np.sqrt(2)))
-        h3 = activ(conv(h2, 'c3', nf=64, rf=3, stride=1, init_scale=np.sqrt(2)))
-        h4 = conv_to_fc(h3)
+        h = tf.layers.conv2d(scaled_images, 32, 8, strides=4, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
+        h2 = tf.layers.conv2d(scaled_images, 64, 4, strides=2, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
+        h3 = tf.layers.conv2d(scaled_images, 64, 3, strides=1, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
+
+        nh = np.prod([v.value for v in h3.get_shape()[1:]])
+        h4 = tf.reshape(h3, [-1, nh])
         
-        pi = fc(h4,'pi', nact, init_scale=0.01)
-        vf = fc(h4, 'v', 1)[:,0]
+        pi = tf.layers.dense(h4, nact, activation=None, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
+        vf = tf.layers.dense(h4, 1, activation=None, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
         
         prob = tf.nn.softmax(pi)
         
