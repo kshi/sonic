@@ -50,6 +50,7 @@ for ite in range(iterations):
             numsteps += 1
             
             # record
+            reward = max(r, reward)
             obss.append(obs)
             acts.append(action_index)
             rews.append(reward)
