@@ -58,11 +58,11 @@ for ite in range(iterations):
             rsum += reward
             # update
             obs = newobs
-            env.render()
             if numsteps > 200 and np.mean(rews[-200:]) < 1:
                 done = True
 
-        # compute returns from instant rewards   
+        # compute returns from instant rewards
+        print(rsum)
         returns = discounted_rewards(rews, gamma)
     
         # record for batch update
@@ -73,7 +73,6 @@ for ite in range(iterations):
 
     baseline.train(OBS, VAL)
 
-    print(np.mean(trajectory_record))
     iteration_record.append(np.mean(trajectory_record))
     trajectory_record = []
     
