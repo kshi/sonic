@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 from utils import *
-from baselines.a2c.utils import conv,fc,conv_to_fc
 
 class Policy(object):
     def __init__(self, sess, optimizer, ob_space, ac_space, reuse=True):

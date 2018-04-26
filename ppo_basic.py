@@ -9,9 +9,9 @@ from sonic_util import make_env
 import sys
 from utils import *
 
-render = True
+render = False
 if len(sys.argv) > 1:
-    render = False
+    render = True
 sess = tf.Session()
 env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
 optimizer = tf.train.AdamOptimizer(2e-4)
@@ -22,7 +22,7 @@ sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-numtrajs = 3  # num of trajecories to collect at each iteration 
+numtrajs = 10  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
 gamma = .9999
 
@@ -62,7 +62,7 @@ for ite in range(iterations):
             obs = newobs
             if render:
                 env.render()
-            if numsteps > 200 and np.mean(rews[-200:]) < 1:
+            if numsteps > 400 and np.mean(rews[-400:]) < 1:
                 done = True
 
         # compute returns from instant rewards
@@ -91,3 +91,4 @@ for ite in range(iterations):
     ADS = VAL - BAS
     
     policy.train(OBS, ACTS, ADS, old_prob)
+
