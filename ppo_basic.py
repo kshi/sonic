@@ -1,10 +1,8 @@
 import numpy as np
 import tensorflow as tf
 from retro_contest.local import make
-from collections import deque
 from policy import Policy
 from baseline import Baseline
-from baselines.a2c.utils import conv,fc,conv_to_fc,ortho_init
 from sonic_util import make_env
 import sys
 from utils import *
@@ -22,7 +20,7 @@ sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-numtrajs = 10  # num of trajecories to collect at each iteration 
+numtrajs = 5  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
 gamma = .9999
 
