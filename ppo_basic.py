@@ -61,9 +61,6 @@ for ite in range(iterations):
             if render:
                 env.render()
 
-            if steps_taken >= step_limit:
-                done = True
-
         # compute returns from instant rewards
         returns = discounted_rewards(rews, gamma)
     
