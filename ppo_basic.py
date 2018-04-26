@@ -11,7 +11,7 @@ render = False
 if len(sys.argv) > 1:
     render = True
 sess = tf.Session()
-env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
+env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
 env = wrap_env(env)
 optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
