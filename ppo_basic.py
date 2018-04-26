@@ -4,26 +4,27 @@ from retro_contest.local import make
 from collections import deque
 from policy import Policy
 from baseline import Baseline
-
+from baselines.a2c.utils import conv,fc,conv_to_fc,ortho_init
 from sonic_util import make_env
-
+import sys
 from utils import *
 
+render = True
+if len(sys.argv) > 1:
+    render = False
 sess = tf.Session()
 env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
 optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
-
 done = False
-iterations = 1
 sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
 numtrajs = 10  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
-gamma = .99
+gamma = .9999
 
 for ite in range(iterations):    
     # trajs records for batch update
@@ -54,10 +55,13 @@ for ite in range(iterations):
             # record
             obss.append(obs)
             acts.append(action_index)
-            rews.append(reward)
+            rews.append(max(0,reward))
             rsum += reward
+            
             # update
             obs = newobs
+            if render:
+                env.render()
             if numsteps > 200 and np.mean(rews[-200:]) < 1:
                 done = True
 
@@ -84,6 +88,6 @@ for ite in range(iterations):
     # update policy
     old_prob = policy.compute_prob_act(OBS, ACTS)
     BAS = baseline.compute_val(OBS)  # compute baseline for variance reduction
-    ADS = VAL - np.squeeze(BAS, 1)
+    ADS = VAL - BAS
     
     policy.train(OBS, ACTS, ADS, old_prob)

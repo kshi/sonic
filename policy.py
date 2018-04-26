@@ -1,24 +1,25 @@
 import tensorflow as tf
 import numpy as np
 from utils import *
+from baselines.a2c.utils import conv,fc,conv_to_fc
 
 class Policy(object):
-    def __init__(self, sess, optimizer, ob_space, ac_space):
+    def __init__(self, sess, optimizer, ob_space, ac_space, reuse=True):
         nh, nw, nc = ob_space.shape
         ob_shape = [None, nh, nw, nc]
         nact = 8
         init_scale=1.0
         init_bias=0.0
         eps = 0.1
-        
+
+        activ = tf.nn.relu
         X = tf.placeholder(tf.uint8, ob_shape)
         scaled_images = tf.cast(X, tf.float32) / 255.
-
-        h = tf.layers.conv2d(scaled_images, 32, 8, strides=4, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
-        h2 = tf.layers.conv2d(scaled_images, 64, 4, strides=2, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
-        h3 = tf.layers.conv2d(scaled_images, 64, 3, strides=1, activation=tf.nn.relu, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
-        h4 = tf.layers.flatten(h3)
-        pi = tf.layers.dense(h4, nact, activation=None, kernel_initializer=tf.orthogonal_initializer(np.sqrt(2)))
+        h = activ(conv(scaled_images, 'p1', nf=32, rf=8, stride=4, init_scale=np.sqrt(2)))
+        h2 = activ(conv(h, 'p2', nf=64, rf=4, stride=2, init_scale=np.sqrt(2)))
+        h3 = activ(conv(h2, 'p3', nf=64, rf=3, stride=1, init_scale=np.sqrt(2)))
+        h4 = conv_to_fc(h3)
+        pi = fc(h4, 'pi', nact, init_scale=0.01)
         prob = tf.nn.softmax(pi)
         
         Q_estimate = tf.placeholder(tf.float32, [None])
