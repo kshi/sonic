@@ -35,7 +35,7 @@ class Policy(object):
         clip_obj = tf.multiply(tf.clip_by_value(ratio, 1-eps, 1+eps), Q_estimate)
         surrogate_loss = -tf.reduce_mean(tf.minimum(pg_obj, clip_obj))
         
-        self.train_op = optimizer.minimize(surrogate_loss)
+        self.train_op = optimizer.apply_gradients(optimizer.compute_gradients(surrogate_loss))
 
         self.state = X
         self.prob = prob

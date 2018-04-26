@@ -22,7 +22,7 @@ sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-numtrajs = 10  # num of trajecories to collect at each iteration 
+numtrajs = 3  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
 gamma = .9999
 

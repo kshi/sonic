@@ -23,7 +23,7 @@ class Baseline(object):
         h4 = conv_to_fc(h3)
         vf = fc(h4, 'val', 1)[:,0]
         loss = tf.reduce_mean(tf.square(vf - value_estimates))
-        self.train_op = optimizer.minimize(loss)
+        self.train_op = optimizer.apply_gradients(optimizer.compute_gradients(loss))
 
         self.state = X
         self.value_estimates = value_estimates
