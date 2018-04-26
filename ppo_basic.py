@@ -66,17 +66,17 @@ for ite in range(iterations):
                 done = True
 
         # compute returns from instant rewards
-        print(rsum)
         returns = discounted_rewards(rews, gamma)
     
         # record for batch update
         VAL += returns
         OBS += obss
         ACTS += acts
-        trajectory_record.append(rsum)        
+        trajectory_record.append(rsum)
 
     baseline.train(OBS, VAL)
 
+    print(np.mean(trajectory_record))
     iteration_record.append(np.mean(trajectory_record))
     trajectory_record = []
     
