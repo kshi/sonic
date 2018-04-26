@@ -20,9 +20,9 @@ sess.run(tf.global_variables_initializer())
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-numtrajs = 5  # num of trajecories to collect at each iteration 
 iterations = 1000  # total num of iterations
 gamma = .9999
+step_limit = 4500 # 5 minutes
 
 for ite in range(iterations):    
     # trajs records for batch update
@@ -32,7 +32,9 @@ for ite in range(iterations):
     VAL = []  # value functions (to update baseline)
     iteration_record = []
     trajectory_record = []
-    for num in range(numtrajs):
+    steps_taken = 0
+    
+    while steps_taken < step_limit:
         # record for each episode
         obss = []  # observations
         acts = []   # actions
@@ -42,13 +44,12 @@ for ite in range(iterations):
         obs = env.reset()
         done = False
       
-        numsteps = 0
         while not done:
             prob = policy.compute_prob(np.array([obs]))
             action_index = np.random.choice(8, p=prob[0])
             action = action_map(action_index)
             newobs, reward, done, _ = env.step(action)
-            numsteps += 1
+            steps_taken += 1
             
             # record
             obss.append(obs)
@@ -60,8 +61,6 @@ for ite in range(iterations):
             obs = newobs
             if render:
                 env.render()
-            if numsteps > 400 and np.mean(rews[-400:]) < 1:
-                done = True
 
         # compute returns from instant rewards
         returns = discounted_rewards(rews, gamma)
