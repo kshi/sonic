@@ -19,6 +19,13 @@ def make_env(stack=True, scale_rew=True):
     env = WarpFrame(env)
     if stack:
         env = FrameStack(env, 4)
+    env = AllowBacktracking(env)
+    return env
+
+def wrap_env(env):
+    env = SonicDiscretizer(env)
+    env = RewardScaler(env)
+    env = AllowBacktracking(env)
     return env
 
 class SonicDiscretizer(gym.ActionWrapper):

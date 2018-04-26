@@ -3,7 +3,7 @@ import tensorflow as tf
 from retro_contest.local import make
 from policy import Policy
 from baseline import Baseline
-from sonic_util import make_env
+from sonic_util import make_env, wrap_env
 import sys
 from utils import *
 
@@ -11,7 +11,8 @@ render = False
 if len(sys.argv) > 1:
     render = True
 sess = tf.Session()
-env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
+env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
+env = wrap_env(env)
 optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
@@ -46,21 +47,22 @@ for ite in range(iterations):
       
         while not done:
             prob = policy.compute_prob(np.array([obs]))
-            action_index = np.random.choice(8, p=prob[0])
-            action = action_map(action_index)
+            action = np.random.choice(len(prob[0]), p=prob[0])
             newobs, reward, done, _ = env.step(action)
             steps_taken += 1
             
             # record
             obss.append(obs)
-            acts.append(action_index)
-            rews.append(max(0,reward))
+            acts.append(action)
+            rews.append(reward)
             rsum += reward
-            
             # update
             obs = newobs
             if render:
                 env.render()
+
+            if steps_taken >= step_limit:
+                done = True
 
         # compute returns from instant rewards
         returns = discounted_rewards(rews, gamma)
@@ -71,11 +73,10 @@ for ite in range(iterations):
         ACTS += acts
         trajectory_record.append(rsum)
 
-    baseline.train(OBS, VAL)
-
     print(np.mean(trajectory_record))
     iteration_record.append(np.mean(trajectory_record))
     trajectory_record = []
+    baseline.train(OBS, VAL)
     
     # update baseline
     VAL = np.array(VAL)

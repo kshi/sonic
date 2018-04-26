@@ -6,7 +6,7 @@ class Policy(object):
     def __init__(self, sess, optimizer, ob_space, ac_space, reuse=True):
         nh, nw, nc = ob_space.shape
         ob_shape = [None, nh, nw, nc]
-        nact = 8
+        nact = 7
         init_scale=1.0
         init_bias=0.0
         eps = 0.1
