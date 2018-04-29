@@ -60,6 +60,8 @@ for ite in range(iterations):
             obs = newobs
             if render:
                 env.render()
+            if len(rews) > 600 and np.mean(rews[-600:]) < 0.01:
+                done = True
 
         # compute returns from instant rewards
         returns = discounted_rewards(rews, gamma)
