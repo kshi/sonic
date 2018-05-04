@@ -18,8 +18,9 @@ optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
 done = False
-sess.run(tf.global_variables_initializer())
+#sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
+saver.restore(sess, "./labyrinthzone_tf_ppo")
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
