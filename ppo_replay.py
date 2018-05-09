@@ -7,6 +7,7 @@ from sonic_util import make_env, wrap_env
 import sys
 from utils import *
 
+filename = sys.argv[1]
 render = True
 sess = tf.Session()
 env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
@@ -17,7 +18,7 @@ policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
 done = False
 saver = tf.train.Saver()
-saver.restore(sess, "./labyrinthzone_tf_ppo")
+saver.restore(sess, "./" + filename)
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline

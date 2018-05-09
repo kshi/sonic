@@ -4,23 +4,36 @@ from retro_contest.local import make
 from policy import Policy
 from baseline import Baseline
 from sonic_util import make_env, wrap_env
+from deep_exploration import perturb
 import sys
 from utils import *
 
 render = False
-if len(sys.argv) > 1:
-    render = True
+try:
+    filename = sys.argv[1]
+except:
+    print("No filename specified; saving to test")
+    filename = "test"
+try:
+    noise_variance = int(sys.argv[2])
+except:
+    noise_variance = 1
+    
 sess = tf.Session()
 env = make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
-#env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
 env = wrap_env(env)
 optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
 done = False
-#sess.run(tf.global_variables_initializer())
+
 saver = tf.train.Saver()
-saver.restore(sess, "./labyrinthzone_tf_ppo")
+try:
+    saver.restore(sess, "./" + filename)
+except:
+    print("No saved parameters; initializing randomly")
+    sess.run(tf.global_variables_initializer())
+    
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
@@ -68,6 +81,7 @@ for ite in range(iterations):
 
         # compute returns from instant rewards
         returns = discounted_rewards(rews, gamma)
+        returns = perturb(returns, noise_variance)
     
         # record for batch update
         VAL += returns
@@ -92,4 +106,4 @@ for ite in range(iterations):
     
     policy.train(OBS, ACTS, ADS, old_prob)
 
-    saver.save(sess, "./labyrinthzone_tf_ppo")
+    saver.save(sess, "./" + filename)
