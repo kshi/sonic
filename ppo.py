@@ -5,6 +5,7 @@ from policy import Policy
 from baseline import Baseline
 from sonic_util import make_env, wrap_env
 from deep_exploration import perturb
+from novel import NovelSearch
 import sys
 from utils import *
 
@@ -25,6 +26,7 @@ env = wrap_env(env)
 optimizer = tf.train.AdamOptimizer(2e-4)
 policy = Policy(sess, optimizer, env.observation_space, env.action_space)
 baseline = Baseline(sess, optimizer, env.observation_space)
+novelty = NovelSearch(3)
 done = False
 
 saver = tf.train.Saver()
@@ -37,8 +39,9 @@ except:
 obs = env.reset()
 alpha = 1e-3  # learning rate for PG
 beta = 1e-3 # learning rate for baseline
-iterations = 1000  # total num of iterations
-gamma = .99
+novel_gamma = 1.01
+right_gamma = 0.99
+iterations = 300
 step_limit = 4500 # 5 minutes
 
 for ite in range(iterations):    
@@ -80,8 +83,11 @@ for ite in range(iterations):
                 done = True
 
         # compute returns from instant rewards
-        returns = discounted_rewards(rews, gamma)
-        returns = perturb(returns, noise_variance)
+        n_rews = novelty.score(obss)
+        right_returns = discounted_rewards(rews, right_gamma)
+        novel_returns = discounted_rewards(n_rews, novel_gamma)
+        returns = [right_returns[i] + novel_returns[i] for i in range(len(right_returns))]
+        #returns = perturb(returns, noise_variance)
     
         # record for batch update
         VAL += returns
@@ -92,12 +98,12 @@ for ite in range(iterations):
     print(np.mean(trajectory_record))
     iteration_record.append(np.mean(trajectory_record))
     trajectory_record = []
-    baseline.train(OBS, VAL)
     
     # update baseline
-    VAL = np.array(VAL)
+    VAL = np.squeeze(np.array(VAL))
     OBS = np.array(OBS)
     ACTS = np.array(ACTS)
+    baseline.train(OBS, VAL)
     
     # update policy
     old_prob = policy.compute_prob_act(OBS, ACTS)
@@ -105,5 +111,7 @@ for ite in range(iterations):
     ADS = VAL - BAS
     
     policy.train(OBS, ACTS, ADS, old_prob)
+
+    novelty.fit(OBS)
 
     saver.save(sess, "./" + filename)
